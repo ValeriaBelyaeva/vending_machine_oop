@@ -2,12 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using vending_machine;   // ← пространство имён твоего приложения (должно совпадать с namespace в Program.cs)
+using vending_machine;   
 using Xunit;
 
 namespace vending_machine.Tests
 {
-    // ===== Деньги =====
     public class MoneyAndCurrencyAmountTests
     {
         [Fact]
@@ -39,7 +38,6 @@ namespace vending_machine.Tests
         }
     }
 
-    // ===== Сдача =====
     public class ChangeStrategyTests
     {
         [Fact]
@@ -74,7 +72,6 @@ namespace vending_machine.Tests
         }
     }
 
-    // ===== Касса =====
     public class CashRegisterTests
     {
         [Fact]
@@ -107,13 +104,12 @@ namespace vending_machine.Tests
         public void CanMakeChange_ConsidersVaultAndHopperTogether()
         {
             var cash = new CashRegister(new GreedyChangeStrategy());
-            cash.AddFloat(Denomination.R2, 10);     // vault: только 2 ₽
-            cash.Insert(new Coin(Denomination.R1)); // hopper: 1 ₽
-            Assert.True(cash.CanMakeChange(100));   // 1 ₽ возможна из (vault+hopper)
+            cash.AddFloat(Denomination.R2, 10);     // vault: только 2 руб
+            cash.Insert(new Coin(Denomination.R1)); // hopper: 1 руб
+            Assert.True(cash.CanMakeChange(100));   // 1 руб возможна из (vault+hopper)
         }
     }
 
-    // ===== Вендинг-машина =====
     public class VendingMachineTests
     {
         private static Inventory<IProduct> OneItemInventory(string id, string name, decimal priceRub, int qty)
@@ -169,7 +165,7 @@ namespace vending_machine.Tests
         {
             var inv  = OneItemInventory("I1", "Напиток", 7m, qty: 1);
             var cash = new CashRegister(new GreedyChangeStrategy());
-            cash.AddFloat(Denomination.R2, 10); // без 1 ₽
+            cash.AddFloat(Denomination.R2, 10); // без 1 руб
             var vm   = new VendingMachine(inv, cash, "1234");
 
             vm.InsertCoin(Denomination.R10);
@@ -232,8 +228,6 @@ namespace vending_machine.Tests
             Assert.False(vm.Buy("UNKNOWN").IsSuccess);
         }
     }
-
-    // ===== Админ =====
     public class AdminSessionTests
     {
         private static (VendingMachine vm, AdminSession admin) CreateWithAdminSession()
