@@ -7,6 +7,7 @@ using Xunit;
 
 namespace vending_machine.Tests
 {
+    // ===== Деньги =====
     public class MoneyAndCurrencyAmountTests
     {
         [Fact]
@@ -38,6 +39,7 @@ namespace vending_machine.Tests
         }
     }
 
+    // ===== Сдача =====
     public class ChangeStrategyTests
     {
         [Fact]
@@ -72,6 +74,7 @@ namespace vending_machine.Tests
         }
     }
 
+    // ===== Касса =====
     public class CashRegisterTests
     {
         [Fact]
@@ -106,10 +109,11 @@ namespace vending_machine.Tests
             var cash = new CashRegister(new GreedyChangeStrategy());
             cash.AddFloat(Denomination.R2, 10);     // vault: только 2 ₽
             cash.Insert(new Coin(Denomination.R1)); // hopper: 1 ₽
-            Assert.True(cash.CanMakeChange(100));   // 1 руб возможна из (vault+hopper)
+            Assert.True(cash.CanMakeChange(100));   // 1 ₽ возможна из (vault+hopper)
         }
     }
 
+    // ===== Вендинг-машина =====
     public class VendingMachineTests
     {
         private static Inventory<IProduct> OneItemInventory(string id, string name, decimal priceRub, int qty)
@@ -229,6 +233,7 @@ namespace vending_machine.Tests
         }
     }
 
+    // ===== Админ =====
     public class AdminSessionTests
     {
         private static (VendingMachine vm, AdminSession admin) CreateWithAdminSession()

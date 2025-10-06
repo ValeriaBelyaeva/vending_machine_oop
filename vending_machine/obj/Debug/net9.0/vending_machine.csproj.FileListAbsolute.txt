@@ -12,4 +12,3 @@ C:\Users\user\RiderProjects\vending_machine\vending_machine\obj\Debug\net9.0\ref
 C:\Users\user\RiderProjects\vending_machine\vending_machine\obj\Debug\net9.0\vending_machine.pdb
 C:\Users\user\RiderProjects\vending_machine\vending_machine\obj\Debug\net9.0\vending_machine.genruntimeconfig.cache
 C:\Users\user\RiderProjects\vending_machine\vending_machine\obj\Debug\net9.0\ref\vending_machine.dll
-C:\Users\user\RiderProjects\vending_machine\vending_machine\obj\Debug\net9.0\vending_machine.sourcelink.json
