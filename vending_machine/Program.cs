@@ -5,9 +5,6 @@ using System.Linq;
 
 namespace vending_machine
 {
-    // -------------------- Деньги --------------------
-
-    /// <summary>Денежная сумма в копейках (иммутабельная).</summary>
     public readonly struct CurrencyAmount : IComparable<CurrencyAmount>, IEquatable<CurrencyAmount>
     {
         public int Kopeks { get; }
@@ -16,7 +13,6 @@ namespace vending_machine
 
         public static CurrencyAmount FromRubles(decimal rubles)
         {
-            // Округление «от нуля»: 1.005 → 1.01р → 101 коп
             var kop = (int)Math.Round(rubles * 100m, 0, MidpointRounding.AwayFromZero);
             return new CurrencyAmount(kop);
         }
@@ -30,7 +26,6 @@ namespace vending_machine
             return $"{rub.ToString("0.00", culture)} ₽";
         }
 
-        // арифметика/сравнения
         public static CurrencyAmount operator +(CurrencyAmount a, CurrencyAmount b) => new(a.Kopeks + b.Kopeks);
         public static CurrencyAmount operator -(CurrencyAmount a, CurrencyAmount b) => new(a.Kopeks - b.Kopeks);
         public static bool operator >=(CurrencyAmount a, CurrencyAmount b) => a.Kopeks >= b.Kopeks;
@@ -44,7 +39,6 @@ namespace vending_machine
         public override int GetHashCode() => Kopeks;
     }
 
-    /// <summary>Номиналы монет (значение enum — это номинал в копейках).</summary>
     public enum Denomination
     {
         R1 = 100,
@@ -53,7 +47,6 @@ namespace vending_machine
         R10 = 1000
     }
 
-    /// <summary>Монета заданного номинала.</summary>
     public sealed record Coin(Denomination Denom)
     {
         public int Kopeks => (int)Denom;
@@ -63,14 +56,9 @@ namespace vending_machine
 
     public interface IChangeStrategy
     {
-        /// <summary>
-        /// Пытается разменять указанную сумму <paramref name="amountKopeks"/> используя
-        /// ограниченный запас монет <paramref name="available"/> (ключ=копейки, значение=кол-во).
-        /// </summary>
         bool TryMakeChange(int amountKopeks, IDictionary<int, int> available, out Dictionary<int, int> change);
     }
 
-    /// <summary>Жадная стратегия выдачи сдачи: идём от крупных к маленьким, учитывая ограниченный запас.</summary>
     public sealed class GreedyChangeStrategy : IChangeStrategy
     {
         public bool TryMakeChange(int amountKopeks, IDictionary<int, int> available, out Dictionary<int, int> change)
@@ -79,7 +67,6 @@ namespace vending_machine
             if (amountKopeks < 0) return false;
             if (amountKopeks == 0) return true;
 
-            // Берём номиналы по убыванию
             foreach (var denom in available.Keys.OrderByDescending(x => x))
             {
                 if (amountKopeks <= 0) break;
@@ -97,24 +84,19 @@ namespace vending_machine
 
             if (amountKopeks == 0) return true;
 
-            // Не смогли разменять — вернём пустую карту
             change.Clear();
             return false;
         }
     }
 
-    // -------------------- Касса --------------------
-
-    /// <summary>Касса автомата: "vault" — накопитель, "hopper" — временно внесённые монеты клиента.</summary>
     public sealed class CashRegister
     {
-        private readonly SortedDictionary<int, int> _vaultCoins = new();  // ключ = копейки номинала, значение = кол-во
+        private readonly SortedDictionary<int, int> _vaultCoins = new(); 
         private readonly SortedDictionary<int, int> _hopperCoins = new();
         private readonly IChangeStrategy _changeStrategy;
 
         public CashRegister(IChangeStrategy changeStrategy) => _changeStrategy = changeStrategy;
 
-        // Вспомогалки
         private static void AddTo(IDictionary<int, int> dict, int denom, int count)
         {
             dict.TryGetValue(denom, out var cur);
@@ -131,7 +113,7 @@ namespace vending_machine
             if (left == 0) dict.Remove(denom);
             else dict[denom] = left;
 
-            return count - use; // что осталось списать
+            return count - use;
         }
 
         private Dictionary<int, int> MergeVaultAndHopperSnapshot()
@@ -174,18 +156,12 @@ namespace vending_machine
             return _changeStrategy.TryMakeChange(amountKopeks, available, out _);
         }
 
-        /// <summary>
-        /// Завершает покупку: переносит монеты клиента в vault и выдаёт сдачу.
-        /// Возвращает карту выданной сдачи (ключ=копейки, значение=кол-во).
-        /// </summary>
         public Dictionary<int, int> CommitPurchaseAndMakeChange(int changeAmountKopeks)
         {
-            // 1) Рассчитать сдачу на снимке (vault + hopper)
             var availableSnapshot = MergeVaultAndHopperSnapshot();
             if (!_changeStrategy.TryMakeChange(changeAmountKopeks, availableSnapshot, out var changeMap))
                 throw new InvalidOperationException("Сдачу посчитать не удалось, хотя её проверили ранее.");
 
-            // 2) Переложить внесённые клиентом монеты в vault
             if (_hopperCoins.Count > 0)
             {
                 foreach (var kvp in _hopperCoins.ToList())
@@ -193,7 +169,6 @@ namespace vending_machine
                 _hopperCoins.Clear();
             }
 
-            // 3) Выдать сдачу ИЗ vault (итерация по changeMap — это отдельная коллекция, модификации vault безопасны)
             var dispensed = new Dictionary<int, int>();
             foreach (var kvp in changeMap)
             {
@@ -209,13 +184,10 @@ namespace vending_machine
             return dispensed;
         }
 
-        // Для админ-снапшота
         public (Dictionary<int, int> vault, Dictionary<int, int> hopper) Snapshot()
             => (new Dictionary<int, int>(_vaultCoins), new Dictionary<int, int>(_hopperCoins));
     }
-
-    // -------------------- Инвентарь --------------------
-
+    
     public interface IProduct
     {
         string Id { get; }
@@ -223,7 +195,6 @@ namespace vending_machine
         CurrencyAmount Price { get; }
     }
 
-    /// <summary>Базовый товар.</summary>
     public abstract class Product : IProduct
     {
         public string Id { get; }
@@ -248,7 +219,6 @@ namespace vending_machine
         public Snack(string id, string name, CurrencyAmount price) : base(id, name, price) { }
     }
 
-    /// <summary>Инвентарь товаров (дженерик).</summary>
     public sealed class Inventory<T> where T : IProduct
     {
         public sealed class Line
@@ -289,7 +259,6 @@ namespace vending_machine
         }
     }
 
-    // -------------------- Результаты операций --------------------
 
     public readonly struct Result<T>
     {
@@ -320,8 +289,6 @@ namespace vending_machine
             Change = change;
         }
     }
-
-    // -------------------- Вендинг-машина и админ --------------------
 
     public sealed class VendingMachine
     {
@@ -393,26 +360,20 @@ namespace vending_machine
         public CurrencyAmount VaultBalance => CurrencyAmount.FromKopeks(_cash.VaultBalanceKopeks);
     }
 
-    // -------------------- Консольный интерфейс --------------------
-
     public static class App
     {
         public static void Run()
         {
-            // 1) Инициализация витрины
             var inventory = new Inventory<IProduct>();
             inventory.AddNew(new Drink("D1", "Вода", CurrencyAmount.FromRubles(2m)), quantity: 10);
             inventory.AddNew(new Drink("D2", "Кола", CurrencyAmount.FromRubles(7m)), quantity: 8);
             inventory.AddNew(new Snack("S1", "Сникерс", CurrencyAmount.FromRubles(5m)), quantity: 5);
 
-            // 2) Касса с начальным запасом
             var cash = new CashRegister(new GreedyChangeStrategy());
             SeedFloat(cash);
 
-            // 3) Автомат + PIN админа
             var vm = new VendingMachine(inventory, cash, adminPin: "1234");
 
-            // 4) Главный цикл
             while (true)
             {
                 Console.Clear();
@@ -645,12 +606,10 @@ namespace vending_machine
         }
     }
 
-    // -------------------- Точка входа --------------------
     public static class Program
     {
         public static void Main(string[] args)
         {
-            // Запускаем консольный интерфейс.
             App.Run();
         }
     }
