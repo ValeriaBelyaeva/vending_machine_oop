@@ -158,15 +158,3 @@
 
 ---
 
-## Запуск
-
-```bash
-# сборка
-dotnet build
-
-# запуск приложения
-dotnet run --project ./vending_machine
-
-# запуск тестов
-dotnet test
-```
