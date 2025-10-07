@@ -11,21 +11,7 @@
 * **Инкапсуляция, инварианты и снапшоты.** Касса не «протекает» наружу; выдаются копии коллекций.
 * **Тесты — как исполняемая спецификация**: покрывают как happy-path так и граничные случаи, читаются как требования.
 
-# Короткий обзор архитектуры
-## Компоненты
-
-* **VendingMachine:** `InsertCoin`, `Buy`, `CancelAndRefund`, `TryEnterAdmin`, `CurrentInserted`. Зависит от `Inventory<IProduct>` и `CashRegister`. Возвращает `Result<T>`, при успехе — `Receipt`.
-* **AdminSession** (только через `TryEnterAdmin`): `ProductsSnapshot`, `AddStock`, `AddFloat`, `CollectAllCash`, `CashSnapshot`, `VaultBalance`.
-* **Inventory<T : IProduct>:** `AddNew`, `Items`, `Find`, `TryDecrease`, `TryAddStock`. Иерархия: `IProduct → Product → (Drink|Snack)`.
-* **CashRegister:** `vault` и `hopper`; `Insert`, `RefundInserted`, `AddFloat`, `EmptyVault`, `CanMakeChange`, `CommitPurchaseAndMakeChange`. Использует `IChangeStrategy` → `GreedyChangeStrategy`.
-* **Деньги/сервис:** `CurrencyAmount` (копейки, иммутабельный, округление), `Denomination`, `Coin`, `Result<T>`, `Receipt`.
-
-## Основные потоки
-
-* **Покупка:** `InsertCoin` → `Buy(id)` → проверка наличия/суммы/сдачи → `CommitPurchaseAndMakeChange` (снимок vault+hopper, перенос, размен) → `Inventory.TryDecrease` → `Result.Success(Receipt)`.
-* **Отмена:** `CancelAndRefund()` возвращает содержимое `hopper`.
-* **Админ:** `TryEnterAdmin(pin)` → операции над теми же `Inventory` и `CashRegister`.
-
+# Короткий обзор
 ## Контракты и инварианты
 
 * Нормальные отказы — `Result.Failure`; исключения — только при нарушении инвариантов.
